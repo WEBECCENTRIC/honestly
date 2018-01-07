@@ -57,6 +57,8 @@ namespace honestly
                         list.Add(node.Attributes["href"].Value);
                 }
 
+                int _count = list.Count;
+
                 return req.CreateResponse(HttpStatusCode.OK, list);
             }
             catch(Exception ex)
