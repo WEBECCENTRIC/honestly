@@ -37,28 +37,39 @@ namespace honestly
                 string content = null;
                 ArrayList list = new ArrayList();
 
-                using (WebClient client = new WebClient())
+                log.Info(String.Format("LinkFinder: Requesting Url {0}", url_value));
+
+                if(!String.IsNullOrEmpty(url_value))
                 {
-                    byte[] page_data = client.DownloadData(new System.Uri(url_value));
+                    using (WebClient client = new WebClient())
+                    {
+                        byte[] page_data = client.DownloadData(new System.Uri(url_value));
 
-                    UTF8Encoding utf8 = new UTF8Encoding();
+                        UTF8Encoding utf8 = new UTF8Encoding();
 
-                    content = utf8.GetString(page_data);
+                        content = utf8.GetString(page_data);
+                    }
+
+                    log.Info("LinkFinder: Loading content into an HTML document");
+
+                    var document = new HtmlDocument();
+                    document.LoadHtml(content);
+
+                    var nodes = document.DocumentNode.Descendants("a");
+
+                    log.Info(String.Format("LinkFinder: Locating HREF nodes. Count {0}", nodes.Count()));
+
+                    if (nodes != null && nodes.Count() > 0)
+                    {
+                        foreach (HtmlNode node in nodes)
+                        {
+                            if (node.Attributes["href"] != null && !String.IsNullOrEmpty(node.Attributes["href"].Value))
+                                list.Add(node.Attributes["href"].Value);
+                        }
+                    }
+
+                    int _count = list.Count;                    
                 }
-
-                var document = new HtmlDocument();
-                document.LoadHtml(content);
-
-                var nodes = document.DocumentNode.Descendants("a");
-
-                foreach (HtmlNode node in nodes)
-                {
-                    if(node.Attributes["href"] != null && !String.IsNullOrEmpty(node.Attributes["href"].Value))
-                        list.Add(node.Attributes["href"].Value);
-                }
-
-                int _count = list.Count;
-
                 return req.CreateResponse(HttpStatusCode.OK, list);
             }
             catch(Exception ex)
